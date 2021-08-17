@@ -1,0 +1,45 @@
+service: v0f-shop
+frameworkVersion: '2'
+useDotenv: true
+
+provider:
+  name: aws
+  region: eu-central-1
+  runtime: nodejs14.x
+
+plugins:
+  - serverless-finch
+  - serverless-spa-plugin
+custom:
+  ## Serverless-finch configuration
+  client:
+    bucketName: v0f-shop-cfn
+    distributionFolder: dist/app
+    indexDocument: index.html
+    manageResources: false
+  s3LocalPath: ${self:custom.client.distributionFolder}/
+  s3BucketName: ${self:custom.client.bucketName}
+
+# CloudFormation
+resources:
+  - ${file(serverless/s3buckets.config.yml)}
+  - Resources:
+      OriginAccessIdentity:
+        Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+        Properties:
+          CloudFrontOriginAccessIdentityConfig:
+            Comment: Access identity between CloudFront and S3 bucket
+  - Resources:
+      WebAppCloudFrontDistribution:
+        Type: AWS::CloudFront::Distribution
+        Properties:
+          DistributionConfig: ${file(serverless/cloudfront.config.yml)}
+
+  ## In order to print out the hosted domain via `serverless info` we need to define the DomainName output for CloudFormation
+  - Outputs:
+      WebAppS3BucketOutput:
+        Value:
+          'Ref': WebAppS3Bucket
+      WebAppCloudFrontDistributionOutput:
+        Value:
+          'Fn::GetAtt': [ WebAppCloudFrontDistribution, DomainName ]
