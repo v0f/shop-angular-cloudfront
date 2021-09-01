@@ -1,0 +1,29 @@
+Resources:
+  ## Specifying the S3 Bucket
+  WebAppS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: ${self:custom.s3BucketName}
+      AccessControl: PublicRead
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: index.html
+
+  ## Specifying the policies to make sure all files inside the Bucket are available to CloudFront
+  WebAppS3BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket:
+        Ref: WebAppS3Bucket
+      PolicyDocument:
+        Statement:
+          - Sid: 'AllowCloudFrontAccessIdentity'
+            Effect: Allow
+            Action: s3:GetObject
+            Resource: arn:aws:s3:::${self:custom.s3BucketName}/*
+            Principal:
+              AWS:
+                Fn::Join:
+                  - ' '
+                  - - 'arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity'
+                    - !Ref OriginAccessIdentity
