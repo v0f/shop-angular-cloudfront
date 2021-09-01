@@ -16,6 +16,7 @@ custom:
     bucketName: v0f-shop-cfn
     distributionFolder: dist/app
     indexDocument: index.html
+    errorDocument: index.html
     manageResources: false
   s3LocalPath: ${self:custom.client.distributionFolder}/
   s3BucketName: ${self:custom.client.bucketName}
